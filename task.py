@@ -84,9 +84,27 @@ class Task:
         if response.status_code == 200:
             logger.debug(response)
 
-    def pause(self, tasks: list[str]) -> None:
+    def pause(self, tasks: list[str]) -> bool:
         '''Pause tasks.'''
         logger.debug('tasks=[%s]', ','.join(tasks))
+
+        params = {
+            'api': 'SYNO.DownloadStation.Task',
+            'version': 1,
+            'method': 'pause',
+            'id': ','.join(tasks),
+            '_sid': self.sid
+        }
+        response = requests.get(self.url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                logger.debug('Paused %d tasks successfully', len(tasks))
+                return True
+            else:
+                logger.error('Failed to pause tasks: %s', data)
+                return False
+        return False
 
     def resume(self, tasks: list[str], destination: str = None) -> None:
         '''Resume tasks.'''
