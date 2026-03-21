@@ -34,3 +34,6 @@ class Syno:
 
     def __exit__(self, exc_type, exc_value, traceback):
         logger.debug('')
+        
+        self.ds.__exit__(exc_type, exc_value, traceback)
+        self.base.__exit__(exc_type, exc_value, traceback)

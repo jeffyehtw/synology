@@ -69,13 +69,16 @@ class Base:
         logger.debug(response)
         if response.status_code == 200:
             data = response.json()
-            logger.debug('sid=%s', data['data']['sid'])
+            if data.get('success', False):
+                logger.debug('sid=%s', data['data']['sid'])
+                return data['data']['sid']
+            else:
+                error_msg = data.get('error', {}).get('errors', 'Authentication failed')
+                logger.error('action=auth, success=false, error=%s', error_msg)
+                raise PermissionError(f'Synology auth failed: {error_msg}')
         else:
-            logger.info('action=exit')
-            logger.info('reason=!response')
-            exit()
-
-        return data['data']['sid']
+            logger.error('action=auth, status=%d', response.status_code)
+            raise ConnectionError(f'Synology auth request failed with status {response.status_code}')
 
     def logout(self) -> None:
         logger.debug('')

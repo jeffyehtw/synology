@@ -24,3 +24,5 @@ class DS:
 
     def __exit__(self, exc_type, exc_value, traceback):
         logger.debug('')
+        
+        self.task.__exit__(exc_type, exc_value, traceback)
