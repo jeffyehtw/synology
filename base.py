@@ -2,6 +2,8 @@ import json
 import requests
 import logging
 
+from utils import SynologyAPIError
+
 logger = logging.getLogger(__name__)
 
 class Base:
@@ -32,7 +34,7 @@ class Base:
             'method': 'query',
             'query': query
         }
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=30)
         data = response.json()
         if response.status_code == 200:
             logger.debug(data)
@@ -65,7 +67,7 @@ class Base:
             'format': fmt
         }
 
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=30)
         logger.debug(response)
         if response.status_code == 200:
             data = response.json()
@@ -75,10 +77,10 @@ class Base:
             else:
                 error_msg = data.get('error', {}).get('errors', 'Authentication failed')
                 logger.error('action=auth, success=false, error=%s', error_msg)
-                raise PermissionError(f'Synology auth failed: {error_msg}')
+                raise SynologyAPIError(f'Synology auth failed: {error_msg}')
         else:
             logger.error('action=auth, status=%d', response.status_code)
-            raise ConnectionError(f'Synology auth request failed with status {response.status_code}')
+            raise SynologyAPIError(f'Synology auth request failed with status {response.status_code}')
 
     def logout(self) -> None:
         logger.debug('')
@@ -91,7 +93,7 @@ class Base:
             'session': self.session
         }
 
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, timeout=30)
         data = response.json()
         if response.status_code == 200:
             logger.debug(data)

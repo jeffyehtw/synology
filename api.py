@@ -36,4 +36,5 @@ class Syno:
         logger.debug('')
         
         self.ds.__exit__(exc_type, exc_value, traceback)
+        self.base.logout()
         self.base.__exit__(exc_type, exc_value, traceback)

@@ -37,7 +37,7 @@ class Task:
             'additional': 'detail,transfer,file,tracker,peer',
             '_sid': self.sid
         }
-        response = requests.get(self.url, params=params)
+        response = requests.get(self.url, params=params, timeout=30)
         if response.status_code == 200:
             data = response.json()
             return data['data']['tasks']
@@ -80,7 +80,7 @@ class Task:
             'force_complete': 'true' if force_complete else 'false',
             '_sid': self.sid
         }
-        response = requests.get(self.url, params=params)
+        response = requests.get(self.url, params=params, timeout=30)
         if response.status_code == 200:
             logger.debug(response)
 
@@ -95,7 +95,7 @@ class Task:
             'id': ','.join(tasks),
             '_sid': self.sid
         }
-        response = requests.get(self.url, params=params)
+        response = requests.get(self.url, params=params, timeout=30)
         if response.status_code == 200:
             data = response.json()
             if data.get('success'):
@@ -106,6 +106,24 @@ class Task:
                 return False
         return False
 
-    def resume(self, tasks: list[str], destination: str = None) -> None:
+    def resume(self, tasks: list[str]) -> bool:
         '''Resume tasks.'''
-        logger.debug('tasks=[%s], destination=%s', ','.join(tasks), destination)
+        logger.debug('tasks=[%s]', ','.join(tasks))
+
+        params = {
+            'api': 'SYNO.DownloadStation.Task',
+            'version': 1,
+            'method': 'resume',
+            'id': ','.join(tasks),
+            '_sid': self.sid
+        }
+        response = requests.get(self.url, params=params, timeout=30)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                logger.debug('Resumed %d tasks successfully', len(tasks))
+                return True
+            else:
+                logger.error('Failed to resume tasks: %s', data)
+                return False
+        return False
