@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import json
 import requests
 import logging
@@ -50,19 +51,44 @@ class Task:
 
     def create(
             self,
-            uri: str,
-            file: str,
-            unzip_password: str = None,
+            uri: str = None,
+            file: str = None,
             destination: str = None
-        ) -> None:
+        ) -> bool:
         '''Create a new download task.'''
-        logging.debug(
-            'uri=%s, file=%s, unzip_password=%s, destination=%s',
+        logger.debug(
+            'uri=%s, file=%s, destination=%s',
             uri,
             file,
-            unzip_password,
             destination
         )
+        params = {
+            'api': 'SYNO.DownloadStation.Task',
+            'version': 3,
+            'method': 'create',
+            '_sid': self.sid
+        }
+        if destination:
+            params['destination'] = destination
+
+        if file:
+            # For .torrent files, use POST with multipart/form-data
+            with open(file, 'rb') as f:
+                files = {'file': (os.path.basename(file), f)}
+                response = requests.post(self.url, params=params, files=files)
+        else:
+            # For URIs/magnets
+            params['uri'] = uri
+            response = requests.get(self.url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            if not data.get('success', False):
+                logger.error('action=create_fail, error_code=%s, response=%s', data.get('error', {}).get('code'), data)
+            return data.get('success', False)
+        
+        logger.error('action=create_fail, status_code=%s', response.status_code)
+        return False
 
     def delete(self, tasks: list[int], force_complete: bool = False) -> None:
         '''Delete tasks.'''
