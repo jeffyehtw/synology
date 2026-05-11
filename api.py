@@ -1,3 +1,4 @@
+import typing
 import logging
 
 from .base import Base
@@ -23,7 +24,7 @@ class Syno:
         self.base = Base(ip=ip, port=port)
         self.ds = DS(ip=ip, port=port)
 
-    def __enter__(self):
+    def __enter__(self) -> "Syno":
         logger.debug('')
 
         self.base.__enter__()
@@ -32,7 +33,12 @@ class Syno:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: typing.Any,
+        exc_value: typing.Any,
+        traceback: typing.Any
+    ) -> None:
         logger.debug('')
         
         self.ds.__exit__(exc_type, exc_value, traceback)

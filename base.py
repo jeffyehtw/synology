@@ -1,3 +1,5 @@
+import typing
+from typing import Dict
 import json
 import requests
 import logging
@@ -13,17 +15,22 @@ class Base:
 
         self.ip = ip
         self.port = port
-        self.session = 'cjyeh'
+        self.session = 'DownloadStation'
 
-    def __enter__(self):
+    def __enter__(self) -> "Base":
         logger.debug('')
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: typing.Any,
+        exc_value: typing.Any,
+        traceback: typing.Any
+    ) -> None:
         logger.debug('')
 
-    def info(self, query: str = 'ALL') -> None:
+    def info(self, query: str = 'ALL') -> Dict:
         '''Get API info.'''
         logger.debug('query=%s', query)
 
@@ -80,7 +87,10 @@ class Base:
                 raise SynologyAPIError(f'Synology auth failed: {error_msg}')
         else:
             logger.error('action=auth, status=%d', response.status_code)
-            raise SynologyAPIError(f'Synology auth request failed with status {response.status_code}')
+            raise SynologyAPIError(
+                f'Synology auth request failed with status '
+                f'{response.status_code}'
+            )
 
     def logout(self) -> None:
         logger.debug('')

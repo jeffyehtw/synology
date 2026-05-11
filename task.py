@@ -1,4 +1,6 @@
 from __future__ import annotations
+import typing
+from typing import List
 
 import os
 import json
@@ -12,20 +14,25 @@ class Task:
     def __init__(self, ip: str, port: str) -> None:
         logger.debug('ip=%s, port=%s', ip, port)
 
-        self.url = f'http://{ip}:{port}/webapi/DownloadStation/task.cgi?'
+        self.url = f'http://{ip}:{port}/webapi/DownloadStation/task.cgi'
         self.sid = None
 
-    def __enter__(self, sid: str):
+    def __enter__(self, sid: str) -> "Task":
         logger.debug('')
 
         self.sid = sid
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: typing.Any,
+        exc_value: typing.Any,
+        traceback: typing.Any
+    ) -> None:
         logger.debug('')
 
-    def list(self, offset: int = 0, limit: int = -1) -> list[dict]:
+    def list(self, offset: int = 0, limit: int = -1) -> List[dict]:
         '''List tasks.'''
         logger.debug('offset=%s, limit=%s', offset, limit)
 
@@ -45,7 +52,7 @@ class Task:
 
         return None
 
-    def info(self, tasks: list[str]) -> None:
+    def info(self, tasks: List[str]) -> None:
         '''Get task info.'''
         logger.debug('tasks=[%s]', ','.join(tasks))
 
@@ -62,35 +69,74 @@ class Task:
             file,
             destination
         )
-        params = {
-            'api': 'SYNO.DownloadStation.Task',
-            'version': 3,
-            'method': 'create',
-            '_sid': self.sid
-        }
-        if destination:
-            params['destination'] = destination
+        
+        session = requests.Session()
+        session.cookies.set('id', self.sid)
 
         if file:
-            # For .torrent files, use POST with multipart/form-data
+            url = self.url.replace('DownloadStation/task.cgi', 'entry.cgi')
+            data = {
+                'api': 'SYNO.DownloadStation2.Task',
+                'version': '2',
+                'method': 'create',
+                'type': '"file"',
+                'create_list': 'false',
+                'file': '["torrent"]'
+            }
+            if destination:
+                data['destination'] = f'"{destination}"'
+            else:
+                data['destination'] = '""'
+                
             with open(file, 'rb') as f:
-                files = {'file': (os.path.basename(file), f)}
-                response = requests.post(self.url, params=params, files=files)
+                files = {
+                    'torrent': (
+                        os.path.basename(file),
+                        f,
+                        'application/x-bittorrent'
+                    )
+                }
+                response = session.post(url, data=data, files=files, timeout=30)
+                
+            if response.status_code == 200:
+                res_data = response.json()
+                if res_data.get('success'):
+                    return True
+                else:
+                    logger.error(
+                        'action=create_fail, error_code=%s, response=%s',
+                        res_data.get('error', {}).get('code'),
+                        res_data
+                    )
+                    return False
         else:
-            # For URIs/magnets
-            params['uri'] = uri
-            response = requests.get(self.url, params=params)
+            data = {
+                'api': 'SYNO.DownloadStation.Task',
+                'version': '2',
+                'method': 'create',
+                'uri': uri
+            }
+            if destination:
+                data['destination'] = destination
+                
+            response = session.get(self.url, params=data, timeout=30)
 
-        if response.status_code == 200:
-            data = response.json()
-            if not data.get('success', False):
-                logger.error('action=create_fail, error_code=%s, response=%s', data.get('error', {}).get('code'), data)
-            return data.get('success', False)
-        
+            if response.status_code == 200:
+                res_data = response.json()
+                if res_data.get('success'):
+                    return True
+                else:
+                    logger.error(
+                        'action=create_fail, error_code=%s, response=%s',
+                        res_data.get('error', {}).get('code'),
+                        res_data
+                    )
+                    return False
+            
         logger.error('action=create_fail, status_code=%s', response.status_code)
         return False
 
-    def delete(self, tasks: list[int], force_complete: bool = False) -> None:
+    def delete(self, tasks: List[int], force_complete: bool = False) -> None:
         '''Delete tasks.'''
         logger.debug(
             'tasks=[%s], force_complete=%d',
@@ -110,7 +156,7 @@ class Task:
         if response.status_code == 200:
             logger.debug(response)
 
-    def pause(self, tasks: list[str]) -> bool:
+    def pause(self, tasks: List[str]) -> bool:
         '''Pause tasks.'''
         logger.debug('tasks=[%s]', ','.join(tasks))
 
@@ -132,7 +178,7 @@ class Task:
                 return False
         return False
 
-    def resume(self, tasks: list[str]) -> bool:
+    def resume(self, tasks: List[str]) -> bool:
         '''Resume tasks.'''
         logger.debug('tasks=[%s]', ','.join(tasks))
 

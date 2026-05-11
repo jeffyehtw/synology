@@ -1,3 +1,4 @@
+import typing
 import json
 import requests
 import logging
@@ -14,7 +15,7 @@ class DS:
         self.sid = None
         self.task = Task(ip=ip, port=port)
 
-    def __enter__(self, sid: str):
+    def __enter__(self, sid: str) -> "DS":
         logger.debug('sid=%s', sid)
 
         self.sid = sid
@@ -22,7 +23,12 @@ class DS:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: typing.Any,
+        exc_value: typing.Any,
+        traceback: typing.Any
+    ) -> None:
         logger.debug('')
         
         self.task.__exit__(exc_type, exc_value, traceback)
