@@ -132,6 +132,17 @@ When calling `task.list()`, each task object contains:
 
 ## Configuration
 
+The submodule expects credentials to be passed explicitly during initialization. An example configuration (`syno.json.example`) is provided in the project root:
+
+```json
+{
+    "ip": "192.168.1.100",
+    "port": "5000",
+    "account": "your-account",
+    "password": "your-password"
+}
+```
+
 The wrapper uses context managers for automatic session management. Authentication is handled automatically when entering the context.
 
 ## Error Handling
