@@ -4,9 +4,11 @@ import json
 import requests
 import logging
 
-from utils import SynologyAPIError
-
 logger = logging.getLogger(__name__)
+
+class SynologyAPIError(Exception):
+    '''Custom exception for Synology API errors'''
+    pass
 
 class Base:
     '''Base class for Synology API interactions.'''
