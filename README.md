@@ -16,14 +16,23 @@ syno/
 
 ### `Syno` (api.py)
 
-Main entry point for interacting with Synology Download Station.
+Main entry point for interacting with Synology Download Station. It inherits from `BaseTorrentClient` and provides a unified interface for torrent operations.
+
+**Methods:**
+- `login()` - Manually login (if not using context manager)
+- `logout()` - Manually logout
+- `list_tasks()` - List all tasks
+- `create_task(uri=None, file=None, destination=None)` - Create a new download task
+- `delete_tasks(tasks)` - Delete tasks by ID
+- `resume_tasks(tasks)` - Resume paused tasks
+- `pause_tasks(tasks)` - Pause active tasks
 
 **Usage:**
 ```python
 from syno.api import Syno
 
-with Syno(ip='192.168.0.100', port=5000, account='user', password='pass') as syno:
-    tasks = syno.ds.task.list()
+with Syno(ip='192.168.0.100', port='5000', account='user', password='pass') as syno:
+    tasks = syno.list_tasks()
     for task in tasks:
         print(task['title'])
 ```
@@ -63,8 +72,8 @@ Manages download tasks on Synology Download Station.
 ```python
 from syno.api import Syno
 
-with Syno(ip='192.168.0.100', port=5000, account='user', password='pass') as syno:
-    tasks = syno.ds.task.list()
+with Syno(ip='192.168.0.100', port='5000', account='user', password='pass') as syno:
+    tasks = syno.list_tasks()
 
     for task in tasks:
         print(f"ID: {task['id']}")
@@ -81,8 +90,8 @@ from syno.api import Syno
 
 task_ids = ['dbid_12345', 'dbid_67890']
 
-with Syno(ip='192.168.0.100', port=5000, account='user', password='pass') as syno:
-    syno.ds.task.delete(tasks=task_ids)
+with Syno(ip='192.168.0.100', port='5000', account='user', password='pass') as syno:
+    syno.delete_tasks(tasks=task_ids)
 ```
 
 ### Resume Tasks
@@ -92,8 +101,8 @@ from syno.api import Syno
 
 task_ids = ['dbid_12345']
 
-with Syno(ip='192.168.0.100', port=5000, account='user', password='pass') as syno:
-    syno.ds.task.resume(tasks=task_ids)
+with Syno(ip='192.168.0.100', port='5000', account='user', password='pass') as syno:
+    syno.resume_tasks(tasks=task_ids)
 ```
 
 ## Task Object Structure
